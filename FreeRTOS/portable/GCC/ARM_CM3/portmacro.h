@@ -75,6 +75,8 @@
 extern "C" {
 #endif
 
+#define PORT_ARCHITECTURE_NAME "ARM_CortexM3"
+
 /*-----------------------------------------------------------
  * Port specific definitions.
  *

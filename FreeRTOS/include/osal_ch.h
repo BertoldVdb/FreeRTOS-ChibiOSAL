@@ -208,6 +208,9 @@ void osalEventRepeaterUnregister(event_repeater_t* event_repeater);
 }
 #endif
 
+/* FreeRTOS thread function template */
+#define THD_FUNCTION(func, param) void func(void* param)
+
 /* Debug functions */
 #if( configASSERT_DEFINED == 1 )
 #define osalDbgAssert(mustBeTrue, msg) do {  \
@@ -393,4 +396,24 @@ static inline void osalInit(void)
 {
 }
 
+/* Some code in ChibiOS seems to call the kernel directly instead of using the osal */
+#define chSysLock osalSysLock
+#define chSysUnock osalSysUnlock
+#define chEvtObjectInit osalEventObjectInit
+#define chVTGetSystemTime osalOsGetSystemTimeX
+#define chCoreGetStatusX xPortGetFreeHeapSize
+static inline void chThdExitS(msg_t msg){
+    (void)msg;
+
+    vTaskDelete(NULL);
+}
+static inline void chEvtBroadcast(event_source_t* event_source){
+    osalEventBroadcastFlags(event_source, 1);
+}
+static inline void chEvtBroadcastI(event_source_t* event_source){
+    osalEventBroadcastFlagsI(event_source, 1);
+}
+#define CH_KERNEL_VERSION "FreeRTOS v9"
+#define CH_CFG_USE_MEMCORE TRUE
+#define CH_CFG_USE_HEAP TRUE
 #endif

@@ -473,3 +473,25 @@ uint8_t *puc;
 	}
 }
 
+/* ChibiOS style memory info function */
+size_t chHeapStatus  (void* ignore, size_t* memFree, size_t* largestBlock){
+    size_t blocks = 0;
+    *memFree = xFreeBytesRemaining;
+    *largestBlock = 0;
+
+    /* Count blocks */
+    BlockLink_t *pxIterator;
+    for(pxIterator = xStart.pxNextFreeBlock; pxIterator->pxNextFreeBlock; pxIterator = pxIterator->pxNextFreeBlock ){
+        if(pxIterator->xBlockSize){
+            blocks++;
+        }
+        if(pxIterator->xBlockSize > *largestBlock){
+            *largestBlock = pxIterator->xBlockSize;
+        }
+    }
+
+    return blocks;
+
+}
+
+

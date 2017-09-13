@@ -4807,10 +4807,8 @@ const TickType_t xConstTickCount = xTickCount;
 
 UBaseType_t uxYieldPending( void )
 {
-	taskENTER_CRITICAL();
 	UBaseType_t isIt = xYieldPending;
 	xYieldPending = pdFALSE;
-	taskEXIT_CRITICAL();
 
 	return isIt;
 }
