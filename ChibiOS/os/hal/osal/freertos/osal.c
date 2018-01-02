@@ -18,16 +18,3 @@
 
 #include "osal.h"
 
-/* Forward IRQs to FreeRTOS */
-void __attribute__((naked)) PendSV_Handler(void){
-	__asm volatile ("b xPortPendSVHandler\n");
-}
-
-void __attribute__((naked)) SysTick_Handler(void){
-	__asm volatile ("b xPortSysTickHandler\n");
-}
-
-void __attribute__((naked)) SVC_Handler(void) {
-	__asm volatile ("b vPortSVCHandler\n");
-}
-

@@ -5,7 +5,7 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+  USE_OPT = -Os -ggdb -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -88,14 +88,15 @@ PROJECT = ch
 # Imported source files and paths
 CHIBIOS = ../ChibiOS
 # Startup files.
-include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f1xx.mk
-# # HAL-OSAL files (optional).
+include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.mk
+# HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
-include $(CHIBIOS)/os/hal/ports/STM32/STM32F1xx/platform.mk
-include $(CHIBIOS)/os/hal/boards/ST_NUCLEO64_F103RB/board.mk
+include $(CHIBIOS)/os/hal/ports/STM32/STM32F0xx/platform.mk
+include $(CHIBIOS)/os/hal/boards/ST_NUCLEO32_F042K6/board.mk
 include $(CHIBIOS)/os/hal/osal/freertos/osal.mk
+
 # Define linker script file here
-LDSCRIPT= $(STARTUPLD)/STM32F103xB.ld
+LDSCRIPT= $(STARTUPLD)/STM32F042x6.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -150,7 +151,7 @@ INCDIR = $(CHIBIOS)/os/license \
 # Compiler settings
 #
 
-MCU  = cortex-m3
+MCU  = cortex-m0
 
 #TRGT = arm-elf-
 TRGT = arm-none-eabi-
@@ -196,13 +197,13 @@ UDEFS =
 UADEFS =
 
 # List all user directories here
-UINCDIR = ../FreeRTOS/include/ ../FreeRTOS/ ../FreeRTOS/portable/GCC/ARM_CM3/
+UINCDIR = ../FreeRTOS/include/ ../FreeRTOS/ ../FreeRTOS/portable/GCC/ARM_CM0/
 
 # List the user directory to look for the libraries here
 ULIBDIR = ../FreeRTOS/
 
 # List all user libraries here
-ULIBS = -lFreeRTOS
+ULIBS = -lFreeRTOS-m0
 
 #
 # End of user defines

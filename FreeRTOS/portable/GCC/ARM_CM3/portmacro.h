@@ -254,12 +254,8 @@ portFORCE_INLINE static void vPortSetBASEPRI( uint32_t ulNewMaskValue )
 }
 /*-----------------------------------------------------------*/
 
-extern void xPortPendSVHandler( void ) __attribute__ (( naked ));
-extern void xPortSysTickHandler( void );
-extern void vPortSVCHandler( void ) __attribute__ (( naked ));
-
 portFORCE_INLINE static BaseType_t xPortIsCriticalSection( void ){
-	uint32_t ulBasePri;
+uint32_t ulBasePri;
 	__asm volatile( "mrs %0, basepri" : "=r"( ulBasePri ) );
 	
 	return (ulBasePri > 0)? pdTRUE : pdFALSE;

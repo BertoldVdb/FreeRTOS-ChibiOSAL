@@ -16,7 +16,8 @@
 #define configUSE_IDLE_HOOK			0
 #define configUSE_TICK_HOOK			0
 #define configUSE_TICKLESS_IDLE     1
-#define configCPU_CLOCK_HZ			( ( unsigned long ) 72000000 )
+//#define configCPU_CLOCK_HZ			( ( unsigned long ) 72000000 )
+#define configCPU_CLOCK_HZ			( ( unsigned long ) 48000000 )
 #define configSYSTICK_CLOCK_HZ      (configCPU_CLOCK_HZ / 8)
 #define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES		( 5 )
@@ -62,7 +63,8 @@ to exclude the API function. */
 (lowest) to 0 (1?) (highest). */
 #define configKERNEL_INTERRUPT_PRIORITY 		255
 /* This priority is used when context switching in a critical section. It must not be masked
- * by the syscall basepri */
+ * by the syscall basepri (or should be above all IRQs that interact with the OS on PRIMASK
+ * based architectures) */
 #define configKERNEL_INTERRUPT_HIPRIORITY       0
 /* !!!! configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to zero !!!!
 See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
