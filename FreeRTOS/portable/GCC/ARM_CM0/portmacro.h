@@ -110,7 +110,6 @@ extern void vClearInterruptMaskFromISR( uint32_t ulMask )  __attribute__((naked)
 
 extern void vPortBusyDelay( unsigned long cycles );
 
-BaseType_t xPortIsCriticalSection( void );
 
 portFORCE_INLINE static BaseType_t xPortIsInsideInterrupt( void )
 {
@@ -119,7 +118,7 @@ BaseType_t xReturn;
 
     /* Obtain the number of the currently executing interrupt. */
     __asm volatile( "mrs %0, ipsr" : "=r"( ulCurrentInterrupt ) );
-
+    
     if( ulCurrentInterrupt == 0 )
     {
         xReturn = pdFALSE;
@@ -132,6 +131,13 @@ BaseType_t xReturn;
     return xReturn;
 }
 
+
+portFORCE_INLINE static BaseType_t xPortIsCriticalSection( void ){
+uint32_t ulPriMask;
+    __asm volatile( "mrs %0, PRIMASK" : "=r"( ulPriMask ) );
+
+    return (ulPriMask > 0)? pdTRUE : pdFALSE;
+}
 
 #define portNOP()
 

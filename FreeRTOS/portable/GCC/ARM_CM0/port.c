@@ -425,7 +425,4 @@ void vPortBusyDelay( unsigned long cycles )
     );
 }
 
-BaseType_t xPortIsCriticalSection( void ){
-    return (uxCriticalNesting > 0)? pdTRUE : pdFALSE;
-}
 
