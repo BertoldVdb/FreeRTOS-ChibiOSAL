@@ -20,14 +20,14 @@
 
 /* Forward IRQs to FreeRTOS */
 void __attribute__((naked)) PendSV_Handler(void){
-        xPortPendSVHandler();
+	__asm volatile ("b xPortPendSVHandler\n");
 }
 
 void __attribute__((naked)) SysTick_Handler(void){
-        xPortSysTickHandler();
+	__asm volatile ("b xPortSysTickHandler\n");
 }
 
 void __attribute__((naked)) SVC_Handler(void) {
-        vPortSVCHandler();
+	__asm volatile ("b vPortSVCHandler\n");
 }
 

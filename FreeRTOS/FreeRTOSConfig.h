@@ -38,6 +38,7 @@
 #define configQUEUE_REGISTRY_SIZE		0
 #define configGENERATE_RUN_TIME_STATS	0
 #define configSUPPORT_STATIC_ALLOCATION 1
+#define configSUPPORT_DYNAMIC_ALLOCATION 1
 
 #define configUSE_TIMERS                0
 #define configTIMER_TASK_PRIORITY       1
@@ -56,6 +57,7 @@ to exclude the API function. */
 
 #define configPORT_BUSY_DELAY_SCALE 	8
 
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
 (lowest) to 0 (1?) (highest). */
 #define configKERNEL_INTERRUPT_PRIORITY 		255
@@ -72,6 +74,8 @@ priority values, 0 to 15.  This must correspond to the
 configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	15
+
+#define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H 1
 
 void errorAssertCalled(const char*, unsigned long, const char*);
 #define configASSERT(x) if( (x) == 0 ) errorAssertCalled( __FILE__, __LINE__, NULL )

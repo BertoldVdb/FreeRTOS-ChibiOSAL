@@ -1,71 +1,30 @@
 /*
-    FreeRTOS V9.0.0 - Copyright (C) 2016 Real Time Engineers Ltd.
-    All rights reserved
-
-    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
-    This file is part of the FreeRTOS distribution.
-
-    FreeRTOS is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
-
-    ***************************************************************************
-    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
-    >>!   distribute a combined work that includes FreeRTOS without being   !<<
-    >>!   obliged to provide the source code for proprietary components     !<<
-    >>!   outside of the FreeRTOS kernel.                                   !<<
-    ***************************************************************************
-
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
-    link: http://www.freertos.org/a00114.html
-
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that is more than just the market leader, it     *
-     *    is the industry's de facto standard.                               *
-     *                                                                       *
-     *    Help yourself get started quickly while simultaneously helping     *
-     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
-     *    tutorial book, reference manual, or both:                          *
-     *    http://www.FreeRTOS.org/Documentation                              *
-     *                                                                       *
-    ***************************************************************************
-
-    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
-    the FAQ page "My application does not run, what could be wrong?".  Have you
-    defined configASSERT()?
-
-    http://www.FreeRTOS.org/support - In return for receiving this top quality
-    embedded software for free we request you assist our global community by
-    participating in the support forum.
-
-    http://www.FreeRTOS.org/training - Investing in training allows your team to
-    be as productive as possible as early as possible.  Now you can receive
-    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
-    Ltd, and the world's leading authority on the world's leading RTOS.
-
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
-    compatible FAT file system, and our tiny thread aware UDP/IP stack.
-
-    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
-    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
-
-    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
-    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and commercial middleware.
-
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
-    engineered and independently SIL3 certified version for use in safety and
-    mission critical applications that require provable dependability.
-
-    1 tab == 4 spaces!
-*/
+ * FreeRTOS Kernel V10.0.0
+ * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software. If you wish to use our Amazon
+ * FreeRTOS name, please do so in a fair use way that does not cause confusion.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * http://www.FreeRTOS.org
+ * http://aws.amazon.com/freertos
+ *
+ * 1 tab == 4 spaces!
+ */
 
 /*-----------------------------------------------------------
  * Implementation of functions defined in portable.h for the ARM CM3 port.
@@ -157,9 +116,9 @@ void vPortSetupTimerInterrupt( void );
 /*
  * Exception handlers.
  */
-void xPortPendSVHandler( void ) __attribute__ (( naked ));
-void xPortSysTickHandler( void );
-void vPortSVCHandler( void ) __attribute__ (( naked ));
+void xPortPendSVHandler( void ) __attribute__ (( naked, used ));
+void xPortSysTickHandler( void ) __attribute__ (( used ));
+void vPortSVCHandler( void ) __attribute__ (( naked, used ));
 
 /*
  * Start first task is a separate function so it can be tested in isolation.
@@ -250,20 +209,20 @@ static void prvTaskExitError( void )
 void vPortSVCHandler( void )
 {
 	__asm volatile (
-					"	ldr	r3, pxCurrentTCBConst2		\n" /* Restore the context. */
-					"	ldr r1, [r3]				\n" /* Use pxCurrentTCBConst to get the pxCurrentTCB address. */
-					"	ldr r0, [r1]				\n" /* The first item in pxCurrentTCB is the task top of stack. */
-					"	ldmia r0!, {r4-r5}			\n" /* Basepri, criticalNesting... */
-					"	ldmia r0!, {r4-r11}			\n" /* Pop the registers that are not automatically saved on exception entry and the critical nesting count. */
-					"	msr psp, r0				\n" /* Restore the task stack pointer. */
-					"	isb					\n"
-					"	mov r0, #0 				\n"
-					"	msr	basepri, r0			\n"
-					"	orr r14, #0xd				\n"
-					"	bx r14					\n"
-					"						\n"
-					"	.align 4				\n"
-					"pxCurrentTCBConst2: .word pxCurrentTCB		\n"
+					"       ldr r3, pxCurrentTCBConst2          \n" /* Restore the context. */
+					"       ldr r1, [r3]                        \n" /* Use pxCurrentTCBConst to get the pxCurrentTCB address. */
+					"       ldr r0, [r1]                        \n" /* The first item in pxCurrentTCB is the task top of stack. */
+					"       ldmia r0!, {r4-r5}                  \n" /* Basepri, criticalNesting... */
+					"       ldmia r0!, {r4-r11}                 \n" /* Pop the registers that are not automatically saved on exception entry and the critical nesting count. */
+					"       msr psp, r0                         \n" /* Restore the task stack pointer. */
+					"       isb                                 \n"
+					"       mov r0, #0                          \n"
+					"       msr	basepri, r0                 \n"
+					"       orr r14, #0xd                       \n"
+					"       bx r14                              \n"
+					"                                           \n"
+					"       .align 4                            \n"
+					"pxCurrentTCBConst2: .word pxCurrentTCB     \n"
 				);
 }
 /*-----------------------------------------------------------*/
@@ -271,16 +230,16 @@ void vPortSVCHandler( void )
 static void prvPortStartFirstTask( void )
 {
 	__asm volatile(
-					" ldr r0, =0xE000ED08 	\n" /* Use the NVIC offset register to locate the stack. */
-					" ldr r0, [r0] 			\n"
-					" ldr r0, [r0] 			\n"
-					" msr msp, r0			\n" /* Set the msp back to the start of the stack. */
-					" cpsie i				\n" /* Globally enable interrupts. */
-					" cpsie f				\n"
-					" dsb					\n"
-					" isb					\n"
-					" svc 0					\n" /* System call to start first task. */
-					" nop					\n"
+					"       ldr r0, =0xE000ED08       \n" /* Use the NVIC offset register to locate the stack. */
+					"       ldr r0, [r0]              \n"
+					"       ldr r0, [r0]              \n"
+					"       msr msp, r0               \n" /* Set the msp back to the start of the stack. */
+					"       cpsie i                   \n" /* Globally enable interrupts. */
+					"       cpsie f                   \n"
+					"       dsb                       \n"
+					"       isb                       \n"
+					"       svc 0                     \n" /* System call to start first task. */
+					"       nop                       \n"
 				);
 }
 /*-----------------------------------------------------------*/
@@ -417,42 +376,42 @@ void xPortPendSVHandler( void )
 
 	__asm volatile
 	(
-	"	ldr r0, =0xe000ed20		\n" /* Reset the PendSV priority */
-	"	mov r2, %1			\n"
-	"	str r2, [r0] 			\n"
-	"					\n"
-	"	mrs r0, psp			\n"
-	"	isb				\n"
-	"					\n"
-	"	ldr	r3, pxCurrentTCBConst	\n" /* Get the location of the current TCB. */
-	"	ldr	r2, [r3]		\n"
-	"					\n"
-	"	stmdb r0!, {r4-r11}		\n" /* Save the remaining registers. */
-	"	ldr r4, =uxCriticalNesting	\n" /* Save critical nesting count and basepri*/
-	"	ldr r4, [r4]			\n"
-	"	mrs r1, basepri			\n"
-	"	stmdb r0!, {r1,r4}		\n"
-	"	str r0, [r2]			\n" /* Save the new top of stack into the first member of the TCB. */
-	"					\n"
-	"	stmdb sp!, {r3, r14}		\n"
-	"	mov r0, %0			\n"
-	"	msr basepri, r0			\n"
-	"	bl vTaskSwitchContext		\n"
-	"	ldmia sp!, {r3, r14}		\n"
-	"					\n"	/* Restore the context. */
-	"	ldr r1, [r3]			\n"
-	"	ldr r0, [r1]			\n" /* The first item in pxCurrentTCB is the task top of stack. */
-	"	ldmia r0!, {r1,r4}		\n"
-	"	msr basepri, r1			\n" /* Restore basepri */
-	"	ldr r1, =uxCriticalNesting	\n" /* Restore critical nesting count */
-	"	str r4, [r1]			\n"
-	"	ldmia r0!, {r4-r11}		\n" /* Pop the registers. */
-	"	msr psp, r0			\n"
-	"	isb				\n"
-	"	bx r14				\n"
-	"					\n"
-	"	.align 4			\n"
-	"pxCurrentTCBConst: .word pxCurrentTCB	\n"
+	"       ldr r0, =0xe000ed20             \n" /* Reset the PendSV priority */
+	"       mov r2, %1                      \n"
+	"       str r2, [r0]                    \n"
+	"                                       \n"
+	"       mrs r0, psp                     \n"
+	"       isb                             \n"
+	"                                       \n"
+	"       ldr	r3, pxCurrentTCBConst   \n" /* Get the location of the current TCB. */
+	"       ldr	r2, [r3]                \n"
+	"                                       \n"
+	"       stmdb r0!, {r4-r11}             \n" /* Save the remaining registers. */
+	"       ldr r4, =uxCriticalNesting      \n" /* Save critical nesting count and basepri*/
+	"       ldr r4, [r4]                    \n"
+	"       mrs r1, basepri                 \n"
+	"       stmdb r0!, {r1,r4}              \n"
+	"       str r0, [r2]                    \n" /* Save the new top of stack into the first member of the TCB. */
+	"                                       \n"
+	"       stmdb sp!, {r3, r14}            \n"
+	"       mov r0, %0                      \n"
+	"       msr basepri, r0                 \n"
+	"       bl vTaskSwitchContext           \n"
+	"       ldmia sp!, {r3, r14}            \n"
+	"                                       \n"	/* Restore the context. */
+	"       ldr r1, [r3]                    \n"
+	"       ldr r0, [r1]                    \n" /* The first item in pxCurrentTCB is the task top of stack. */
+	"       ldmia r0!, {r1,r4}              \n"
+	"       msr basepri, r1                 \n" /* Restore basepri */
+	"       ldr r1, =uxCriticalNesting      \n" /* Restore critical nesting count */
+	"       str r4, [r1]                    \n"
+	"       ldmia r0!, {r4-r11}             \n" /* Pop the registers. */
+	"       msr psp, r0                     \n"
+	"       isb                             \n"
+	"       bx r14                          \n"
+	"                                       \n"
+	"       .align 4                        \n"
+	"pxCurrentTCBConst: .word pxCurrentTCB  \n"
 	::"i"(configMAX_SYSCALL_INTERRUPT_PRIORITY),"r"(ulSyspri2Value)
 	);
 }
@@ -478,11 +437,11 @@ void xPortSysTickHandler( void )
 }
 /*-----------------------------------------------------------*/
 
-#if configUSE_TICKLESS_IDLE == 1
+#if( configUSE_TICKLESS_IDLE == 1 )
 
 	__attribute__((weak)) void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
 	{
-	uint32_t ulReloadValue, ulCompleteTickPeriods, ulCompletedSysTickDecrements, ulSysTickCTRL;
+	uint32_t ulReloadValue, ulCompleteTickPeriods, ulCompletedSysTickDecrements;
 	TickType_t xModifiableIdleTime;
 
 		/* Make sure the SysTick reload value does not overflow the counter. */
@@ -508,7 +467,7 @@ void xPortSysTickHandler( void )
 
 		/* Enter a critical section but don't use the taskENTER_CRITICAL()
 		method as that will mask interrupts that should exit sleep mode. */
-		__asm volatile( "cpsid i" );
+		__asm volatile( "cpsid i" ::: "memory" );
 		__asm volatile( "dsb" );
 		__asm volatile( "isb" );
 
@@ -529,7 +488,7 @@ void xPortSysTickHandler( void )
 
 			/* Re-enable interrupts - see comments above the cpsid instruction()
 			above. */
-			__asm volatile( "cpsie i" );
+			__asm volatile( "cpsie i" ::: "memory" );
 		}
 		else
 		{
@@ -552,29 +511,47 @@ void xPortSysTickHandler( void )
 			configPRE_SLEEP_PROCESSING( xModifiableIdleTime );
 			if( xModifiableIdleTime > 0 )
 			{
-				__asm volatile( "dsb" );
+				__asm volatile( "dsb" ::: "memory" );
 				__asm volatile( "wfi" );
 				__asm volatile( "isb" );
 			}
 			configPOST_SLEEP_PROCESSING( xExpectedIdleTime );
 
-			/* Stop SysTick.  Again, the time the SysTick is stopped for is
-			accounted for as best it can be, but using the tickless mode will
-			inevitably result in some tiny drift of the time maintained by the
-			kernel with respect to calendar time. */
-			ulSysTickCTRL = portNVIC_SYSTICK_CTRL_REG;
-			portNVIC_SYSTICK_CTRL_REG = ( ulSysTickCTRL & ~portNVIC_SYSTICK_ENABLE_BIT );
+			/* Re-enable interrupts to allow the interrupt that brought the MCU
+			out of sleep mode to execute immediately.  see comments above
+			__disable_interrupt() call above. */
+			__asm volatile( "cpsie i" ::: "memory" );
+			__asm volatile( "dsb" );
+			__asm volatile( "isb" );
 
-			/* Re-enable interrupts - see comments above the cpsid instruction()
-			above. */
-			__asm volatile( "cpsie i" );
+			/* Disable interrupts again because the clock is about to be stopped
+			and interrupts that execute while the clock is stopped will increase
+			any slippage between the time maintained by the RTOS and calendar
+			time. */
+			__asm volatile( "cpsid i" ::: "memory" );
+			__asm volatile( "dsb" );
+			__asm volatile( "isb" );
 
-			if( ( ulSysTickCTRL & portNVIC_SYSTICK_COUNT_FLAG_BIT ) != 0 )
+			/* Disable the SysTick clock without reading the
+			portNVIC_SYSTICK_CTRL_REG register to ensure the
+			portNVIC_SYSTICK_COUNT_FLAG_BIT is not cleared if it is set.  Again,
+			the time the SysTick is stopped for is accounted for as best it can
+			be, but using the tickless mode will inevitably result in some tiny
+			drift of the time maintained by the kernel with respect to calendar
+			time*/
+			portNVIC_SYSTICK_CTRL_REG = ( portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT );
+
+			/* Determine if the SysTick clock has already counted to zero and
+			been set back to the current reload value (the reload back being
+			correct for the entire expected idle time) or if the SysTick is yet
+			to count to zero (in which case an interrupt other than the SysTick
+			must have brought the system out of sleep mode). */
+			if( ( portNVIC_SYSTICK_CTRL_REG & portNVIC_SYSTICK_COUNT_FLAG_BIT ) != 0 )
 			{
 				uint32_t ulCalculatedLoadValue;
 
-				/* The tick interrupt has already executed, and the SysTick
-				count reloaded with ulReloadValue.  Reset the
+				/* The tick interrupt is already pending, and the SysTick count
+				reloaded with ulReloadValue.  Reset the
 				portNVIC_SYSTICK_LOAD_REG with whatever remains of this tick
 				period. */
 				ulCalculatedLoadValue = ( ulTimerCountsForOneTick - 1UL ) - ( ulReloadValue - portNVIC_SYSTICK_CURRENT_VALUE_REG );
@@ -589,11 +566,9 @@ void xPortSysTickHandler( void )
 
 				portNVIC_SYSTICK_LOAD_REG = ulCalculatedLoadValue;
 
-				/* The tick interrupt handler will already have pended the tick
-				processing in the kernel.  As the pending tick will be
-				processed as soon as this function exits, the tick value
-				maintained by the tick is stepped forward by one less than the
-				time spent waiting. */
+				/* As the pending tick will be processed as soon as this
+				function exits, the tick value maintained by the tick is stepped
+				forward by one less than the time spent waiting. */
 				ulCompleteTickPeriods = xExpectedIdleTime - 1UL;
 			}
 			else
@@ -615,21 +590,18 @@ void xPortSysTickHandler( void )
 
 			/* Restart SysTick so it runs from portNVIC_SYSTICK_LOAD_REG
 			again, then set portNVIC_SYSTICK_LOAD_REG back to its standard
-			value.  The critical section is used to ensure the tick interrupt
-			can only execute once in the case that the reload register is near
-			zero. */
+			value. */
 			portNVIC_SYSTICK_CURRENT_VALUE_REG = 0UL;
-			portENTER_CRITICAL();
-			{
-				portNVIC_SYSTICK_CTRL_REG |= portNVIC_SYSTICK_ENABLE_BIT;
-				vTaskStepTick( ulCompleteTickPeriods );
-				portNVIC_SYSTICK_LOAD_REG = ulTimerCountsForOneTick - 1UL;
-			}
-			portEXIT_CRITICAL();
+			portNVIC_SYSTICK_CTRL_REG |= portNVIC_SYSTICK_ENABLE_BIT;
+			vTaskStepTick( ulCompleteTickPeriods );
+			portNVIC_SYSTICK_LOAD_REG = ulTimerCountsForOneTick - 1UL;
+
+			/* Exit with interrpts enabled. */
+			__asm volatile( "cpsie i" ::: "memory" );
 		}
 	}
 
-#endif /* #if configUSE_TICKLESS_IDLE */
+#endif /* configUSE_TICKLESS_IDLE */
 /*-----------------------------------------------------------*/
 
 /*
@@ -724,12 +696,12 @@ void vPortBusyDelay( unsigned long cycles )
 	
 	__asm volatile
 	(
-		"loop%=:					\n"
-		"	cmp %0, %1				\n"
-		"	beq done%=      			\n"
-		"	adds %0, 1				\n"
-		"	b loop%=				\n"
-		"done%=:					\n"
+		"loop%=:                     \n"
+		"       cmp %0, %1           \n"
+		"       beq done%=           \n"
+		"       adds %0, 1           \n"
+		"       b loop%=             \n"
+		"done%=:                     \n"
 		::"r"(i), "r"(cycles)
 	);
 }
