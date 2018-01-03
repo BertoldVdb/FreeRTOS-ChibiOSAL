@@ -161,11 +161,7 @@ void osalEventRegisterCallbackI(event_source_t* source, void (*eventCallback)(ev
 } while(0)
 
 #else
-#define osalDbgAssert(mustBeTrue, msg) do {                         \
-    osalSysDisable();                                               \
-    while(1);                                                       \
-} while(0)
-
+#define osalDbgAssert(mustBeTrue, msg)
 
 #define osalSysHalt(text) do {                                      \
     osalSysDisable();                                               \
