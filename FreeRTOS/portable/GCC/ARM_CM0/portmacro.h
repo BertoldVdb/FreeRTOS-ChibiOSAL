@@ -44,6 +44,8 @@ extern "C" {
  *-----------------------------------------------------------
  */
 
+#define PORT_ARCHITECTURE_NAME "ARM_CortexM0"
+
 #define portFORCE_INLINE inline __attribute__(( always_inline))
 
 /* Type definitions. */
