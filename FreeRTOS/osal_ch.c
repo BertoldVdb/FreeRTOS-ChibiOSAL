@@ -189,6 +189,7 @@ void osalEventRepeaterUnregister(event_repeater_t* event_repeater){
     /* Are we the first? */
     if(!event_repeater->prevRepeater){
         event_repeater->source->firstRepeater = event_repeater->nextRepeater;
+        event_repeater->source->firstRepeater->prevRepeater = NULL;
         return;
     }
 
