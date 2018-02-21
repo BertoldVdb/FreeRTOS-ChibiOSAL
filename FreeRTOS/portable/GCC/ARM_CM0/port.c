@@ -421,7 +421,7 @@ void vPortBusyDelay( unsigned long cycles )
         "       adds %0, 1           \n"
         "       b loop%=             \n"
         "done%=:                     \n"
-        ::"r"(i), "r"(cycles)
+        :"+r"(i): "r"(cycles)
     );
 }
 
