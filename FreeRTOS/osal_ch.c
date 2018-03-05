@@ -43,7 +43,13 @@ msg_t osalThreadEnqueueTimeoutS(threads_queue_t* thread_queue, systime_t timeout
     vTaskSetThreadLocalStoragePointer(currentTask, 0, thread_queue->head);
     thread_queue->head = currentTask;
 
-    return osalThreadSuspendTimeoutS(NULL, timeout);
+    /* Issue found by jwdfki */
+    msg_t msg = osalThreadSuspendTimeoutS(NULL, timeout);
+    if(msg == MSG_TIMEOUT) {
+        thread_queue->head = pvTaskGetThreadLocalStoragePointer(currentTask, 0);
+    }
+
+    return msg;
 }
 
 void osalThreadDequeueAllI(threads_queue_t* thread_queue, msg_t msg)
