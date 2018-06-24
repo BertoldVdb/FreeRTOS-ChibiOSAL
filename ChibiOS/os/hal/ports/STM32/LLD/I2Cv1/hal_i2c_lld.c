@@ -247,6 +247,26 @@ static void i2c_lld_serve_event_interrupt(I2CDriver *i2cp) {
   uint32_t regSR2 = dp->SR2;
   uint32_t event = dp->SR1;
 
+  i2cp->numInterrupts++;
+
+  /* BERTOLD: When SDA is glitched the module gets into BERR state (makes sense), 
+   * but although this state can be cleared, the interrupt keeps firing (hardware bug?). 
+   * We disable all periperal interrupts here to avoid CPU hang, and then reset the periperal
+   * from userspace. As an extra safety precaution we also stop if more than 30 interrupts
+   * are used in one transfer */
+  if ((event & I2C_SR1_BERR) || (i2cp->numInterrupts>=30)) {
+    dp->SR1 &= ~I2C_SR1_BERR;
+    dp->CR2 &=~ I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN;
+  
+    dmaStreamDisable(i2cp->dmatx);
+    dmaStreamDisable(i2cp->dmarx);
+
+    i2cp->errors = I2C_BUS_ERROR;
+    _i2c_wakeup_error_isr(i2cp);
+    return;
+  }
+
+
   /* Interrupts are disabled just before dmaStreamEnable() because there
      is no need of interrupts until next transaction begin. All the work is
      done by the DMA.*/
@@ -362,6 +382,7 @@ static void i2c_lld_serve_error_interrupt(I2CDriver *i2cp, uint16_t sr) {
   dmaStreamDisable(i2cp->dmatx);
   dmaStreamDisable(i2cp->dmarx);
 
+  i2cp->numInterrupts++;
   i2cp->errors = I2C_NO_ERROR;
 
   if (sr & I2C_SR1_BERR)                            /* Bus error.           */
@@ -721,6 +742,8 @@ msg_t i2c_lld_master_receive_timeout(I2CDriver *i2cp, i2caddr_t addr,
   osalDbgCheck(rxbytes > 1);
 #endif
 
+  i2cp->numInterrupts = 0;
+
   /* Resetting error flags for this transfer.*/
   i2cp->errors = I2C_NO_ERROR;
 
@@ -800,6 +823,8 @@ msg_t i2c_lld_master_transmit_timeout(I2CDriver *i2cp, i2caddr_t addr,
 #if defined(STM32F1XX_I2C)
   osalDbgCheck((rxbytes == 0) || ((rxbytes > 1) && (rxbuf != NULL)));
 #endif
+
+  i2cp->numInterrupts = 0;
 
   /* Resetting error flags for this transfer.*/
   i2cp->errors = I2C_NO_ERROR;
