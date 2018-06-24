@@ -30,6 +30,9 @@
 
 /* In this file there are slightly more complicated functions */
 
+#define LOCAL_STORAGE_QUEUE_NEXT 0 
+#define LOCAL_STORAGE_QUEUE_PREV 1
+
 msg_t osalThreadEnqueueTimeoutS(threads_queue_t* thread_queue, systime_t timeout)
 {
     if(!timeout) {
@@ -40,16 +43,61 @@ msg_t osalThreadEnqueueTimeoutS(threads_queue_t* thread_queue, systime_t timeout
     osalDbgCheckClassS();
 
     thread_t currentTask = xGetCurrentTaskHandle();
-    vTaskSetThreadLocalStoragePointer(currentTask, 0, thread_queue->head);
-    thread_queue->head = currentTask;
+   
+    /* Insert in the front */
+    vTaskSetThreadLocalStoragePointer(currentTask, LOCAL_STORAGE_QUEUE_NEXT, thread_queue->head);
+    vTaskSetThreadLocalStoragePointer(currentTask, LOCAL_STORAGE_QUEUE_PREV, NULL);
 
-    /* Issue found by jwdfki */
+    if(thread_queue->head){
+        vTaskSetThreadLocalStoragePointer(thread_queue->head, LOCAL_STORAGE_QUEUE_PREV, currentTask);
+    }
+    thread_queue->head = currentTask;
+    if(!thread_queue->tail){
+        thread_queue->tail = currentTask;
+    }
+
     msg_t msg = osalThreadSuspendTimeoutS(NULL, timeout);
+    
+    /* Remove from the queue in case of timeout */
     if(msg == MSG_TIMEOUT) {
-        thread_queue->head = pvTaskGetThreadLocalStoragePointer(currentTask, 0);
+        thread_t nextTask = pvTaskGetThreadLocalStoragePointer(currentTask, LOCAL_STORAGE_QUEUE_NEXT);
+        thread_t prevTask = pvTaskGetThreadLocalStoragePointer(currentTask, LOCAL_STORAGE_QUEUE_PREV);
+
+        if(nextTask){
+            vTaskSetThreadLocalStoragePointer(nextTask, LOCAL_STORAGE_QUEUE_PREV, prevTask);
+        }else{
+            thread_queue->tail = prevTask;
+        }
+        if(prevTask){
+            vTaskSetThreadLocalStoragePointer(prevTask, LOCAL_STORAGE_QUEUE_NEXT, nextTask);
+        }else{
+            thread_queue->head = nextTask;
+        }
     }
 
     return msg;
+}
+
+static bool osalThreadDequeueI(threads_queue_t* thread_queue, msg_t msg){
+    if(!thread_queue->tail){
+        return false;
+    }
+
+    thread_reference_t toWakeUp = thread_queue->tail;
+
+    /* Lookup the last task, and pop it */
+    thread_t prevTask = pvTaskGetThreadLocalStoragePointer(toWakeUp, LOCAL_STORAGE_QUEUE_PREV);
+    if(prevTask){
+        vTaskSetThreadLocalStoragePointer(prevTask, LOCAL_STORAGE_QUEUE_NEXT, NULL);
+    }else{
+        thread_queue->head = NULL;
+    }
+    thread_queue->tail = prevTask;
+   
+    /* Resume it */
+    osalThreadResumeI(&toWakeUp, msg);
+
+    return true;
 }
 
 void osalThreadDequeueAllI(threads_queue_t* thread_queue, msg_t msg)
@@ -57,12 +105,7 @@ void osalThreadDequeueAllI(threads_queue_t* thread_queue, msg_t msg)
     osalDbgCheck(thread_queue != NULL);
     osalDbgCheckClassI();
 
-    thread_reference_t toWakeUp;
-    while((toWakeUp = thread_queue->head)) {
-        osalThreadResumeI(&toWakeUp, msg);
-
-        thread_queue->head = pvTaskGetThreadLocalStoragePointer(toWakeUp, 0);
-    }
+    while(osalThreadDequeueI(thread_queue, msg));
 }
 
 void osalThreadDequeueNextI(threads_queue_t* thread_queue, msg_t msg)
@@ -70,26 +113,12 @@ void osalThreadDequeueNextI(threads_queue_t* thread_queue, msg_t msg)
     osalDbgCheck(thread_queue != NULL);
     osalDbgCheckClassI();
 
-    thread_reference_t toWakeUp = thread_queue->head;
-    if(toWakeUp) {
-        osalThreadResumeI(&toWakeUp, msg);
-
-        thread_queue->head = pvTaskGetThreadLocalStoragePointer(toWakeUp, 0);
-    }
+    osalThreadDequeueI(thread_queue, msg);
 }
 
 msg_t osalThreadSuspendS(thread_reference_t* thread_reference)
 {
-    msg_t ulInterruptStatus;
-    osalDbgCheckClassS();
-
-    if(thread_reference) {
-        *thread_reference = xGetCurrentTaskHandle();
-    }
-
-    xTaskNotifyWait(ULONG_MAX, ULONG_MAX, (uint32_t*)&ulInterruptStatus, portMAX_DELAY );
-
-    return ulInterruptStatus;
+    return osalThreadSuspendTimeoutS(thread_reference, portMAX_DELAY);
 }
 
 msg_t osalThreadSuspendTimeoutS(thread_reference_t* thread_reference, systime_t timeout)
@@ -106,6 +135,10 @@ msg_t osalThreadSuspendTimeoutS(thread_reference_t* thread_reference, systime_t 
     }
 
     if(!xTaskNotifyWait(ULONG_MAX, ULONG_MAX, (uint32_t*)&ulInterruptStatus, timeout )) {
+        if(thread_reference) {
+            *thread_reference = NULL;
+        }
+
         return MSG_TIMEOUT;
     }
 

@@ -78,6 +78,7 @@ typedef TaskHandle_t thread_t;
 typedef thread_t * thread_reference_t;
 typedef struct {
     thread_t head;
+    thread_t tail;
 } threads_queue_t;
 
 /* Stores the system state before enterring critical section */
@@ -252,13 +253,19 @@ static inline void osalMutexUnlock(mutex_t* mutex)
 static inline void osalThreadResumeI(thread_reference_t* thread_reference, msg_t msg)
 {
     osalDbgCheckClassI();
-    if(*thread_reference) xTaskNotifyFromISR( *thread_reference, msg, eSetValueWithOverwrite, NULL );
+    if(*thread_reference) {
+        xTaskNotifyFromISR( *thread_reference, msg, eSetValueWithOverwrite, NULL );
+        *thread_reference = NULL;
+    }
 }
 
 static inline void osalThreadResumeS(thread_reference_t* thread_reference, msg_t msg)
 {
     osalDbgCheckClassS();
-    if(*thread_reference) xTaskNotify( *thread_reference, msg, eSetValueWithOverwrite );
+    if(*thread_reference) {
+        xTaskNotify( *thread_reference, msg, eSetValueWithOverwrite );
+        *thread_reference = NULL;
+    }
 }
 
 static inline void osalSysPolledDelayX(rtcnt_t cycles)
@@ -271,6 +278,7 @@ static inline void osalThreadQueueObjectInit(threads_queue_t* thread_queue)
 {
     osalDbgCheck(thread_queue != NULL);
     thread_queue->head = NULL;
+    thread_queue->tail = NULL;
 }
 
 static inline void osalMutexObjectInit(mutex_t* mutex)

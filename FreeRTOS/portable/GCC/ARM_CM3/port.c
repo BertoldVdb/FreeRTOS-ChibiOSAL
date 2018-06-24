@@ -686,7 +686,6 @@ __attribute__(( weak )) void vPortSetupTimerInterrupt( void )
 
 #endif /* configASSERT_DEFINED */
 
-
 void vPortBusyDelay( unsigned long cycles )
 {
 	unsigned long i = 0;
@@ -706,20 +705,3 @@ void vPortBusyDelay( unsigned long cycles )
 		:"+r"(i): "r"(cycles)
 	);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
